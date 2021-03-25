@@ -23,6 +23,14 @@ resource "azurerm_resource_group" "example" {
   location = "eastus"
 }
 
+output "username" {
+  value = "nikhil"
+  }
+
+output "password" {
+  value = "kjh767"
+  }
+
 
 
 variable "client_id" {
