@@ -12,8 +12,6 @@ resource "azuread_user" "user" {
   display_name          = var.display_name
   password              = random_string.fqdn.result
   force_password_change = true
-  given_name = var.given_name
-  surname = var.surname
   company_name = var.company_name
   job_title = var.job_title
   department = var.department
@@ -102,42 +100,42 @@ resource "azurerm_storage_container" "storage_container" {
 
 #  To Create virtual machine scale set.
 
-resource "azurerm_linux_virtual_machine_scale_set" "example" {
-  count =          var.subnet_count[var.user_profile]
-  name                = "${var.display_name}-VMss-${count.index+1}"
-  resource_group_name = azurerm_resource_group.rg.name
-  location            = azurerm_resource_group.rg.location
-  sku                 = var.vmss_instance_size[var.user_profile]
-  instances           = var.vmss_instance_count[var.user_profile]
-  admin_username      = var.vm_username
-  admin_password = var.vm_password 
-  disable_password_authentication = false
-  source_image_reference {
-    publisher = var.source_image_reference.publisher
-    offer     = var.source_image_reference.offer
-    sku       = var.source_image_reference.sku
-    version   = var.source_image_reference.version
-  }
+# resource "azurerm_linux_virtual_machine_scale_set" "example" {
+#   count =          var.subnet_count[var.user_profile]
+#   name                = "${var.display_name}-VMss-${count.index+1}"
+#   resource_group_name = azurerm_resource_group.rg.name
+#   location            = azurerm_resource_group.rg.location
+#   sku                 = var.vmss_instance_size[var.user_profile]
+#   instances           = var.vmss_instance_count[var.user_profile]
+#   admin_username      = var.vm_username
+#   admin_password = var.vm_password 
+#   disable_password_authentication = false
+#   source_image_reference {
+#     publisher = var.source_image_reference.publisher
+#     offer     = var.source_image_reference.offer
+#     sku       = var.source_image_reference.sku
+#     version   = var.source_image_reference.version
+#   }
 
-  os_disk {
-    storage_account_type = var.storage_account_type[var.user_profile]
-    caching              = "ReadWrite"
-  }
+#   os_disk {
+#     storage_account_type = var.storage_account_type[var.user_profile]
+#     caching              = "ReadWrite"
+#   }
 
-  network_interface {
-    name    = "${var.display_name}-NIC-${count.index+1}"
-    primary = true
-    ip_configuration {
-      name      = "internal"
-      primary   = true
-      public_ip_address {
-        name = "${var.display_name}-PublicIP-${count.index+1}"
-      }
-      subnet_id = element(azurerm_subnet.subnet.*.id,count.index)
-    }
-  }
-  tags = local.common_tags
-}
+#   network_interface {
+#     name    = "${var.display_name}-NIC-${count.index+1}"
+#     primary = true
+#     ip_configuration {
+#       name      = "internal"
+#       primary   = true
+#       public_ip_address {
+#         name = "${var.display_name}-PublicIP-${count.index+1}"
+#       }
+#       subnet_id = element(azurerm_subnet.subnet.*.id,count.index)
+#     }
+#   }
+#   tags = local.common_tags
+# }
 
 
 
