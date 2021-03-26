@@ -88,16 +88,6 @@ variable "quota" {
   default = 1000
 }
 
-variable "vmss_instance_count" {
-  type = map
-  description = "number of virtual machines in virtual machine scale set"
-  default = {
-    administrator = 2
-    tester        = 2
-    developer     = 2
-  }
-}
-
 variable "vmss_instance_size"{
   type = map
   description = "Th size ( SKU ) of virtual machines in virtual machine scale set"
@@ -152,24 +142,8 @@ variable "domain" {
   description = "domain/subscription email of the account"
 }
 
-variable "given_name"{}
-variable "surname"{}
 variable "company_name"{}
 variable "job_title"{}
 variable "mobile"{}
 variable "department" {}
 
-
-
-
-
-
-
-
-
- # given_name = ""
-  # surname = ""
-  # company_name = ""
-  # job_title = ""
-  # department = ""
-  # mobile = ""
