@@ -12,12 +12,12 @@ resource "azuread_user" "user" {
   display_name          = var.display_name
   password              = random_string.fqdn.result
   force_password_change = true
-  given_name = var.given_name
-  surname = var.surname
-  company_name = var.company_name
-  job_title = var.job_title
-  department = var.department
-  mobile = var.mobile
+  given_name            = var.given_name
+  surname               = var.surname
+  company_name          = var.company_name
+  job_title             = var.job_title
+  department            = var.department
+  mobile                = var.mobile
 }
 
 # TO get Current Subscription
@@ -30,13 +30,13 @@ data "azurerm_role_definition" "role" {
   scope = data.azurerm_subscription.primary.id
 }
 
- 
+
 
 # To create Resource group for user
 resource "azurerm_resource_group" "rg" {
   name     = "${var.display_name}-ResourceGroup"
   location = var.location
-  tags = local.common_tags
+  tags     = local.common_tags
 }
 
 
@@ -67,7 +67,7 @@ resource "azurerm_virtual_network" "example_vnet" {
   resource_group_name = azurerm_resource_group.rg.name
   location            = var.location
   address_space       = var.vnet_address_space
-  tags = local.common_tags
+  tags                = local.common_tags
 }
 
 
@@ -82,36 +82,57 @@ resource "azurerm_subnet" "subnet" {
 }
 
 
-# Create Storage Account for user
-resource "azurerm_storage_account" "storage_account" {
-  name                     = lower("${var.display_name}gslab")
-  resource_group_name      = azurerm_resource_group.rg.name
-  location                 = azurerm_resource_group.rg.location
-  account_tier             = local.account_tier        # Production => Premium | Dev,Test => Standard
-  account_replication_type = var.account_replication_type
+#  To create public ip's
+resource "azurerm_public_ip" "public_ip" {
+  count               = var.subnet_count[var.user_profile]
+  name                = "public-ip-${count.index + 1}"
+  resource_group_name = azurerm_resource_group.rg.name
+  location            = azurerm_resource_group.rg.location
+  allocation_method   = var.allocation_method
+
   tags = local.common_tags
 }
 
-# To create Container Storage
-resource "azurerm_storage_container" "storage_container" {
-  name                  = lower("${var.display_name}-storagecontainer")
-  storage_account_name  = azurerm_storage_account.storage_account.name
+
+# To create network interfaces
+resource "azurerm_network_interface" "example" {
+  count               = var.subnet_count[var.user_profile]
+  name                = "nic-${count.index + 1}"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+
+  ip_configuration {
+    name                          = "ipconfiguration-${count.index + 1}"
+    subnet_id                     = element(azurerm_subnet.subnet.*.id, count.index)
+    private_ip_address_allocation = var.private_ip_address_allocation
+    public_ip_address_id          = element(azurerm_public_ip.public_ip.*.id, count.index)
+  }
 }
 
 
 
-#  To Create virtual machine scale set.
 
-resource "azurerm_linux_virtual_machine_scale_set" "example" {
-  count =          var.subnet_count[var.user_profile]
-  name                = "${var.display_name}-VMss-${count.index+1}"
-  resource_group_name = azurerm_resource_group.rg.name
-  location            = azurerm_resource_group.rg.location
-  sku                 = var.vmss_instance_size[var.user_profile]
-  instances           = var.vmss_instance_count[var.user_profile]
-  admin_username      = var.vm_username
-  admin_password = var.vm_password 
+# LINUX VIRTUAL MACHINE PROVISIONING
+
+
+resource "azurerm_linux_virtual_machine" "example" {
+  count                           = var.subnet_count[var.user_profile]
+  name                            = "${var.display_name}-VM-${count.index + 1}"
+  resource_group_name             = azurerm_resource_group.rg.name
+  location                        = azurerm_resource_group.rg.location
+  size                            = var.vm_size[var.user_profile]
+  admin_username                  = var.vm_username
+  admin_password                  = var.vm_password
   disable_password_authentication = false
+  network_interface_ids = [
+    element(azurerm_network_interface.example.*.id, count.index)
+  ]
+
+  os_disk {
+    caching              = "ReadWrite"
+    storage_account_type = var.storage_account_type[var.user_profile]
+  }
+
   source_image_reference {
     publisher = var.source_image_reference.publisher
     offer     = var.source_image_reference.offer
@@ -119,24 +140,39 @@ resource "azurerm_linux_virtual_machine_scale_set" "example" {
     version   = var.source_image_reference.version
   }
 
-  os_disk {
-    storage_account_type = var.storage_account_type[var.user_profile]
-    caching              = "ReadWrite"
+  # Provisioner for Adding hosts to ansible tower inventory
+  provisioner "local-exec" {
+    command = "tower-cli host create --name ${element(azurerm_public_ip.public_ip.*.ip_address, count.index)} --inventory 3"
   }
 
-  network_interface {
-    name    = "${var.display_name}-NIC-${count.index+1}"
-    primary = true
-    ip_configuration {
-      name      = "internal"
-      primary   = true
-      public_ip_address {
-        name = "${var.display_name}-PublicIP-${count.index+1}"
-      }
-      subnet_id = element(azurerm_subnet.subnet.*.id,count.index)
-    }
+}
+
+
+resource "null_resource" "launch_job_template" {
+  provisioner "local-exec" {
+    command = "tower-cli job launch --job-template=9"
   }
-  tags = local.common_tags
+  depends_on = [
+    azurerm_linux_virtual_machine.example
+  ]
+}
+
+
+
+# Create Storage Account for user
+resource "azurerm_storage_account" "storage_account" {
+  name                     = lower("${var.display_name}gslab")
+  resource_group_name      = azurerm_resource_group.rg.name
+  location                 = azurerm_resource_group.rg.location
+  account_tier             = local.account_tier # Production => Premium | Dev,Test => Standard
+  account_replication_type = var.account_replication_type
+  tags                     = local.common_tags
+}
+
+# To create Container Storage
+resource "azurerm_storage_container" "storage_container" {
+  name                 = lower("${var.display_name}-storagecontainer")
+  storage_account_name = azurerm_storage_account.storage_account.name
 }
 
 
@@ -148,26 +184,5 @@ resource "azurerm_linux_virtual_machine_scale_set" "example" {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# resource "azurerm_storage_share" "storage_share" {
-#   name                 = lower("${var.display_name}-filestorage")
-#   storage_account_name = azurerm_storage_account.storage_account.name
-#   quota                = var.quota
-# }
 
 

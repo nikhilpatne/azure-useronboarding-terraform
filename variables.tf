@@ -41,14 +41,14 @@ variable "enviornment" {
 
 
 variable "vnet_address_space" {
-  type = list(string)
-  default = ["10.0.0.0/16"]
+  type        = list(string)
+  default     = ["10.0.0.0/16"]
   description = "CIDR block / Virtual network address space"
 }
 
 variable "subnet_address_prefixes" {
-  type = list(string)
-  default = ["10.0.1.0/24", "10.0.2.0/24"]
+  type        = list(string)
+  default     = ["10.0.1.0/24", "10.0.2.0/24"]
   description = "CIDR block / subnet address space"
 }
 
@@ -61,6 +61,18 @@ variable "subnet_count" {
   }
 }
 
+variable "allocation_method" {
+  type        = string
+  default     = "Static"
+  description = "Public Ip allocation method. ( Static / Dynamic )"
+}
+
+variable "private_ip_address_allocation" {
+  type        = string
+  default     = "Dynamic"
+  description = "Private Ip allocation method ( Static / Dynamic )"
+}
+
 variable "group_name" {
   type = map
   default = {
@@ -71,52 +83,52 @@ variable "group_name" {
 }
 
 variable "account_tier" {
-  type = string
-  default = ""
+  type        = string
+  default     = ""
   description = "Account tier of storage account ( Standard / Premium )"
 }
 
 variable "account_replication_type" {
-  type = string
-  default = "LRS"
+  type        = string
+  default     = "LRS"
   description = " Defines the type of replication to use for this storage account (LRS, GRS, RAGRS, ZRS, GZRS and RAGZRS)"
 }
 
 variable "quota" {
-  type = number
+  type        = number
   description = "The maximum size of the share, in gigabytes."
-  default = 1000
+  default     = 1000
 }
 
-variable "vmss_instance_count" {
-  type = map
-  description = "number of virtual machines in virtual machine scale set"
-  default = {
-    administrator = 2
-    tester        = 2
-    developer     = 2
-  }
-}
+# variable "vmss_instance_count" {
+#   type        = map
+#   description = "number of virtual machines in virtual machine scale set"
+#   default = {
+#     administrator = 2
+#     tester        = 2
+#     developer     = 2
+#   }
+# }
 
-variable "vmss_instance_size"{
-  type = map
+variable "vm_size" {
+  type        = map
   description = "Th size ( SKU ) of virtual machines in virtual machine scale set"
   default = {
-    administrator = "Standard_B2ms"   #2CPU, 8GB Ram
-    tester        = "Standard_B1s"     #1CPU, 1GB Ram
-    developer     = "Standard_B1s"        #1CPU, GB Ram
+    administrator = "Standard_B2ms" #2CPU, 8GB Ram
+    tester        = "Standard_B1s"  #1CPU, 1GB Ram
+    developer     = "Standard_B1s"  #1CPU, GB Ram
   }
 }
 
 variable "vm_username" {
-  type = string
-  default = "gslab"
+  type        = string
+  default     = "gslab"
   description = "virtual machine username"
 }
 
 variable "vm_password" {
-  type = string
-  default = "gsLab!123@#$%^&*()"
+  type        = string
+  default     = "gsLab!123@#$%^&*()"
   description = "default password for the virtual machine"
 }
 
@@ -137,26 +149,26 @@ variable "source_image_reference" {
 
 
 
-variable "storage_account_type"{
-  type = map
+variable "storage_account_type" {
+  type        = map
   description = "The Type of Storage Account which should back this the Internal OS Disk."
   default = {
-    administrator = "Premium_LRS"  
-    tester        = "Standard_LRS"     
+    administrator = "Premium_LRS"
+    tester        = "Standard_LRS"
     developer     = "Standard_LRS"
   }
 }
 
 variable "domain" {
-  type = string
+  type        = string
   description = "domain/subscription email of the account"
 }
 
-variable "given_name"{}
-variable "surname"{}
-variable "company_name"{}
-variable "job_title"{}
-variable "mobile"{}
+variable "given_name" {}
+variable "surname" {}
+variable "company_name" {}
+variable "job_title" {}
+variable "mobile" {}
 variable "department" {}
 
 
@@ -167,9 +179,9 @@ variable "department" {}
 
 
 
- # given_name = ""
-  # surname = ""
-  # company_name = ""
-  # job_title = ""
-  # department = ""
-  # mobile = ""
+# given_name = ""
+# surname = ""
+# company_name = ""
+# job_title = ""
+# department = ""
+# mobile = ""

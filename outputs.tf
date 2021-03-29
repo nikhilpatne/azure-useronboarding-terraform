@@ -10,7 +10,7 @@
 
 
 output "username" {
-  value = "${var.user_principal_name}@ ${var.domain}"
+  value       = "${var.user_principal_name}@ ${var.domain}"
   description = "username of the user"
 }
 
