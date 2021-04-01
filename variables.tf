@@ -120,13 +120,13 @@ variable "vm_size" {
   }
 }
 
-variable "vm_username" {
+variable "vm_user" {
   type        = string
   default     = "gslab"
   description = "virtual machine username"
 }
 
-variable "vm_password" {
+variable "vm_pwd" {
   type        = string
   default     = "gsLab!123@#$%^&*()"
   description = "default password for the virtual machine"
@@ -168,9 +168,13 @@ variable "given_name" {}
 variable "surname" {}
 variable "company_name" {}
 variable "job_title" {}
-variable "mobile" {}
+variable "mobile_number" {}
 variable "department" {}
-
+variable "user_email" {}
+variable "project_name" {}
+variable "virtual_machine_prefix" {}
+variable "vm_username" {}
+variable "vm_password" {}
 
 
 

@@ -17,7 +17,7 @@ resource "azuread_user" "user" {
   company_name          = var.company_name
   job_title             = var.job_title
   department            = var.department
-  mobile                = var.mobile
+  mobile                = var.mobile_number
 }
 
 # TO get Current Subscription
@@ -34,7 +34,7 @@ data "azurerm_role_definition" "role" {
 
 # To create Resource group for user
 resource "azurerm_resource_group" "rg" {
-  name     = "${var.display_name}-ResourceGroup"
+  name     = "${var.display_name}-${var.project_name}-ResourceGroup"
   location = var.location
   tags     = local.common_tags
 }
@@ -63,7 +63,7 @@ resource "azuread_group_member" "group_member" {
 # TO Create Virtual network
 
 resource "azurerm_virtual_network" "example_vnet" {
-  name                = "${var.display_name}-vnet"
+  name                = "${var.display_name}-${var.project_name}-vnet"
   resource_group_name = azurerm_resource_group.rg.name
   location            = var.location
   address_space       = var.vnet_address_space
@@ -75,7 +75,7 @@ resource "azurerm_virtual_network" "example_vnet" {
 # Create a subnets within the virtual network
 resource "azurerm_subnet" "subnet" {
   count                = var.subnet_count[var.user_profile]
-  name                 = "${var.display_name}-subnet-${format("%02d", count.index)}"
+  name                 = "${var.display_name}-${var.project_name}-subnet-${format("%02d", count.index)}"
   resource_group_name  = azurerm_resource_group.rg.name
   virtual_network_name = azurerm_virtual_network.example_vnet.name
   address_prefixes     = [element(var.subnet_address_prefixes, count.index)]
@@ -117,12 +117,12 @@ resource "azurerm_network_interface" "example" {
 
 resource "azurerm_linux_virtual_machine" "example" {
   count                           = var.subnet_count[var.user_profile]
-  name                            = "${var.display_name}-VM-${count.index + 1}"
+  name                            = var.virtual_machine_prefix == "" ? "${var.display_name}-${var.project_name}-VM-${count.index + 1}" : "${var.virtual_machine_prefix}-VM-${count.index + 1}"
   resource_group_name             = azurerm_resource_group.rg.name
   location                        = azurerm_resource_group.rg.location
   size                            = var.vm_size[var.user_profile]
-  admin_username                  = var.vm_username
-  admin_password                  = var.vm_password
+  admin_username                  = var.vm_username == "" ? var.vm_user : var.vm_username
+  admin_password                  = var.vm_password == "" ? var.vm_pwd : var.vm_password
   disable_password_authentication = false
   network_interface_ids = [
     element(azurerm_network_interface.example.*.id, count.index)
@@ -148,6 +148,7 @@ resource "azurerm_linux_virtual_machine" "example" {
 }
 
 
+# Created Null Resource for launching a job template using local-exec.
 resource "null_resource" "launch_job_template" {
   provisioner "local-exec" {
     command = "tower-cli job launch --job-template=9"
@@ -158,22 +159,32 @@ resource "null_resource" "launch_job_template" {
 }
 
 
+# Create Null resource for executing python script for sending an email to user.
+resource "null_resource" "send_email" {
+  provisioner "local-exec" {
+    command = "python3 send_email.py ${var.display_name} ${var.user_email} ${var.user_principal_name}@vidyaptne.com ${random_string.fqdn.result} ${var.vm_username} ${var.vm_password} ${azurerm_public_ip.public_ip.*.id} ${var.mobile_number}"
+  }
+  depends_on = [
+    azurerm_linux_virtual_machine.example
+  ]
+}
+
 
 # Create Storage Account for user
-resource "azurerm_storage_account" "storage_account" {
-  name                     = lower("${var.display_name}gslab")
-  resource_group_name      = azurerm_resource_group.rg.name
-  location                 = azurerm_resource_group.rg.location
-  account_tier             = local.account_tier # Production => Premium | Dev,Test => Standard
-  account_replication_type = var.account_replication_type
-  tags                     = local.common_tags
-}
+# resource "azurerm_storage_account" "storage_account" {
+#   name                     = lower("${var.display_name}gslab")
+#   resource_group_name      = azurerm_resource_group.rg.name
+#   location                 = azurerm_resource_group.rg.location
+#   account_tier             = local.account_tier # Production => Premium | Dev,Test => Standard
+#   account_replication_type = var.account_replication_type
+#   tags                     = local.common_tags
+# }
 
-# To create Container Storage
-resource "azurerm_storage_container" "storage_container" {
-  name                 = lower("${var.display_name}-storagecontainer")
-  storage_account_name = azurerm_storage_account.storage_account.name
-}
+# # To create Container Storage
+# resource "azurerm_storage_container" "storage_container" {
+#   name                 = lower("${var.display_name}-storagecontainer")
+#   storage_account_name = azurerm_storage_account.storage_account.name
+# }
 
 
 
