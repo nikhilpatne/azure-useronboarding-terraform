@@ -132,7 +132,7 @@ a {
                 </div>
 
                 <div class="box_footer">
-                <p> &copy Copyright 2021 Great Software Laboratory. All rights reserved.</p>
+                <p> Copyright 2021 Great Software Laboratory. All rights reserved.</p>
                 </div>
         </div>
 </body>
