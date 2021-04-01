@@ -154,37 +154,41 @@ resource "null_resource" "launch_job_template" {
     command = "tower-cli job launch --job-template=9"
   }
   depends_on = [
-    azurerm_linux_virtual_machine.example
+    azurerm_storage_account.storage_account
   ]
 }
 
 
 # Create Null resource for executing python script for sending an email to user.
-resource "null_resource" "send_email" {
-  provisioner "local-exec" {
-    command = "python3 send_email.py ${var.display_name} ${var.user_email} ${var.user_principal_name}@vidyaptne.com ${random_string.fqdn.result} ${var.vm_username} ${var.vm_password} ${azurerm_public_ip.public_ip.*.id} ${var.mobile_number}"
-  }
-  depends_on = [
-    azurerm_linux_virtual_machine.example
-  ]
-}
+# resource "null_resource" "send_email" {
+#   provisioner "local-exec" {
+#     command = "python3 send_email.py ${var.display_name} ${var.user_email} ${var.user_principal_name} ${random_string.fqdn.result} ${azurerm_linux_virtual_machine.example[0].admin_username} ${azurerm_linux_virtual_machine.example[0].admin_password} ${azurerm_public_ip.public_ip[0].id} ${var.mobile_number}"
+#   }
+#   depends_on = [
+#     azurerm_storage_account.storage_account
+#   ]
+# }
 
 
 # Create Storage Account for user
-# resource "azurerm_storage_account" "storage_account" {
-#   name                     = lower("${var.display_name}gslab")
-#   resource_group_name      = azurerm_resource_group.rg.name
-#   location                 = azurerm_resource_group.rg.location
-#   account_tier             = local.account_tier # Production => Premium | Dev,Test => Standard
-#   account_replication_type = var.account_replication_type
-#   tags                     = local.common_tags
-# }
+resource "azurerm_storage_account" "storage_account" {
+  name                     = lower("${var.display_name}gslab")
+  resource_group_name      = azurerm_resource_group.rg.name
+  location                 = azurerm_resource_group.rg.location
+  account_tier             = local.account_tier # Production => Premium | Dev,Test => Standard
+  account_replication_type = var.account_replication_type
+  tags                     = local.common_tags
+  depends_on = [
+    azurerm_linux_virtual_machine.example
+  ]
 
-# # To create Container Storage
-# resource "azurerm_storage_container" "storage_container" {
-#   name                 = lower("${var.display_name}-storagecontainer")
-#   storage_account_name = azurerm_storage_account.storage_account.name
-# }
+}
+
+# To create Container Storage
+resource "azurerm_storage_container" "storage_container" {
+  name                 = lower("${var.display_name}-storagecontainer")
+  storage_account_name = azurerm_storage_account.storage_account.name
+}
 
 
 
