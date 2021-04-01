@@ -5,30 +5,20 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
 
-display_name = sys.argv[1]
-user_email = sys.argv[2]
-azure_username = sys.argv[3]
-azure_password = sys.argv[4]
-virtual_machine_username = sys.argv[5]
-virtual_machine_password = sys.argv[6]
-public_ip_address = sys.argv[7]
-
-mobile_number = sys.argv[8]
-
-
-
+username = sys.argv[1]
+mobile_number = sys.argv[3]
+subject = username + ",Welcome to your Microsoft Azure Account"
+# body = "This is an email with attachment sent from Python"
 sender_email = "nikhilpatne94@gmail.com"
+receiver_email = sys.argv[2]
 password = "9766189990"
-receiver_email = user_email
 
-
-subject = display_name + " ,Welcome to your Microsoft Azure Account"
-
+# Create a multipart message and set headers
 message = MIMEMultipart()
 message["From"] = sender_email
 message["To"] = receiver_email
 message["Subject"] = subject
-message["Bcc"] = sender_email
+#message["Bcc"] = receiver_email
 
 
 # message.attach(MIMEText(body, "plain"))
@@ -40,7 +30,7 @@ html = """\
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>xxx</title>
+    <title>email</title>
     <style>
     *{
     margin: 0;
@@ -125,7 +115,7 @@ a {
                 </div>
 
                 <div class="box_body">
-                   <h2>Hello Tanya</h2>
+                   <h2>Welcome to Azure</h2>
                     <br>
                     <p>Welcome to Microsoft Azure Account. Your new account has successfully created with access to Azure apps, and services.
                         </p>
@@ -153,29 +143,15 @@ part1 = MIMEText(html, "html")
 message.attach(part1)
 
 
-#   To create a Text file of credentials
+#   That file is created in pipeline.
 filename = "azure_credentials.txt" 
-fileObject = open(filename, "w")
-fileObject.write("\n\n")
-fileObject.write("Hey, {} Your account details are as follows...!! \n \n".format(display_name))
-fileObject.write("============================================================================= \n \n")
-fileObject.write("Your Initial Credentials of Azure portal : \n")
-fileObject.write("             Username : {} \n".format(azure_username))
-fileObject.write("             Password : {} \n \n".format(azure_password))
-fileObject.write("------------------------------------------------------------------------------ \n \n")
-fileObject.write("Your Virtual Machines Details : \n")
-fileObject.write("             Username : {} \n".format(virtual_machine_username))
-fileObject.write("             Password : {} \n".format(virtual_machine_password))
-fileObject.write("             VMS_IP : {} \n \n".format(public_ip_address))
-fileObject.write("================================================================================ \n \n")
-fileObject.close()
 
 pre = None
 # output zip file path
 output = "credentials.zip"
 
 # set password value
-file_password = mobile_number
+file_password = sys.argv[3]
 # compress level
 com_lvl = 5
 # compressing file
@@ -215,4 +191,4 @@ except Exception as e:
 
 # Delete the file 
 os.remove(filename)
-os.remove(output)
+#os.remove(output)
