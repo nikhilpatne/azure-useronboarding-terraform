@@ -11,7 +11,7 @@ subject = username + ",Welcome to your Microsoft Azure Account"
 # body = "This is an email with attachment sent from Python"
 sender_email = "nikhilpatne94@gmail.com"
 receiver_email = sys.argv[2]
-password = "9766189990"
+password = ""
 
 # Create a multipart message and set headers
 message = MIMEMultipart()
